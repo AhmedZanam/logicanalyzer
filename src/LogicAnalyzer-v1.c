@@ -19,22 +19,52 @@
 #define INPUT_GPIO 4
 //#define CYCLES 1000
 
-int main()
+
+static volatile int globalCounter;
+static volatile int counter;
+
+void myInterrupt (void) {
+    ++globalCounter;
+}
+
+int main(int argc, char *argv[])
 {
-    int bits[1000];
+    int data[410];
     wiringPiSetupGpio();
+    int ret = 0;
+    //int counter = 0;
+    pinMode(INPUT_GPIO, INPUT);
     
-    pinMode(INPUT_GPIO, INPUT);//
-    while(1)
+    wiringPiISR (INPUT_GPIO, INT_EDGE_BOTH, &myInterrupt);
+    while(1){
+        ret = waitForInterrupt (INPUT_GPIO, 20000);
+        
+        if(ret > 0){
+            ++counter;
+            data[counter] = digitalRead(INPUT_GPIO);
+            //printf("ret: %d counter: %d globalCounter: %d Bit: %d\n", ret, counter, globalCounter, digitalRead(INPUT_GPIO));
+            if(counter == 410)
+            {
+                for(int i = 0; i < 410; ++i){
+                    printf("%d", data[i]);
+                }
+                break;
+            }
+        }
+        
+    }
+    
+/*
+    while(ret == 0)
     {
+        printf("Counter: %5d Bit: %d\n", globalCounter,digitalRead(INPUT_GPIO));
         //for(int i = 0; i < sizeof(bits); i++)
         //{
             //bits[i] = digitalRead(pin);
         //}
-        //delay(200);
-        printf("%d", digitalRead(INPUT_GPIO));
-        
+        //delay(200); 
     }
+*/
     return EXIT_SUCCESS;
 }
 
